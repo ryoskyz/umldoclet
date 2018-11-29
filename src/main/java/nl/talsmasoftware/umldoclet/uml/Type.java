@@ -21,6 +21,8 @@ import nl.talsmasoftware.umldoclet.rendering.indent.IndentingPrintWriter;
 import java.util.Collection;
 
 import static java.util.Objects.requireNonNull;
+import static nl.talsmasoftware.umldoclet.uml.Type.Classification.ANNOTATION;
+import static nl.talsmasoftware.umldoclet.uml.Type.Classification.INTERFACE;
 
 public class Type extends UMLPart implements Comparable<Type> {
     /**
@@ -37,7 +39,7 @@ public class Type extends UMLPart implements Comparable<Type> {
     }
 
     private final Namespace namespace;
-    private final Classification classfication;
+    private final Classification classification;
     private TypeName name;
     private final boolean isDeprecated, addPackageToName;
     private Link link;
@@ -50,7 +52,7 @@ public class Type extends UMLPart implements Comparable<Type> {
                  boolean addPackageToName, Collection<? extends UMLPart> children) {
         super(namespace);
         this.namespace = requireNonNull(namespace, "Containing package is <null>.");
-        this.classfication = requireNonNull(classification, "Type classification is <null>.");
+        this.classification = requireNonNull(classification, "Type classification is <null>.");
         this.name = requireNonNull(name, "Type name is <null>.");
         this.isDeprecated = isDeprecated;
         this.addPackageToName = addPackageToName;
@@ -83,19 +85,19 @@ public class Type extends UMLPart implements Comparable<Type> {
     }
 
     public Type deprecated() {
-        return new Type(getNamespace(), classfication, name, true, addPackageToName, getChildren());
+        return new Type(getNamespace(), classification, name, true, addPackageToName, getChildren());
     }
 
     public Type addPackageToName() {
-        return new Type(getNamespace(), classfication, name, isDeprecated, true, getChildren());
+        return new Type(getNamespace(), classification, name, isDeprecated, true, getChildren());
     }
 
     public Namespace getNamespace() {
         return namespace;
     }
 
-    public Classification getClassfication() {
-        return classfication;
+    public Classification getClassification() {
+        return classification;
     }
 
     @Override
@@ -118,19 +120,37 @@ public class Type extends UMLPart implements Comparable<Type> {
     @Override
     public <IPW extends IndentingPrintWriter> IPW writeTo(IPW output) {
         // Namespace aware compensation
-        final Namespace namespace = getParent() instanceof PackageUml
-                ? new Namespace(getRootUMLPart(), ((PackageUml) getParent()).packageName) : null;
-        output.append(classfication.toUml()).whitespace();
-        writeNameTo(output, namespace).whitespace();
-        if (isDeprecated) output.append("<<deprecated>>").whitespace();
-        link().writeTo(output).whitespace();
-        writeChildrenTo(output).newline();
+        Namespace namespace = null;
+        if (getParent() instanceof PackageUml) {
+            namespace = new Namespace(getRootUMLPart(), ((PackageUml) getParent()).packageName);
+        }
+
+        if (ANNOTATION.equals(classification)) {
+            // Workaround for annotation body support: Render annotation as if it were a class
+            // TODO should we create a subclass of Type for this?
+            output.append(INTERFACE.toUml()).whitespace();
+            writeNameTo(output, namespace).whitespace();
+            if (isDeprecated) output.append("<<deprecated>>").whitespace();
+            link().writeTo(output).whitespace();
+            writeChildrenTo(output).newline();
+            output.append(ANNOTATION.toUml()).whitespace()
+                    .append(name.toUml(TypeDisplay.QUALIFIED, namespace)).newline();
+        } else {
+            output.append(classification.toUml()).whitespace();
+            writeNameTo(output, namespace).whitespace();
+            if (isDeprecated) output.append("<<deprecated>>").whitespace();
+            link().writeTo(output).whitespace();
+            writeChildrenTo(output).newline();
+        }
+
         return output;
     }
 
     @Override
     public <IPW extends IndentingPrintWriter> IPW writeChildrenTo(IPW output) {
-        if (!getChildren().isEmpty()) super.writeChildrenTo(output.append('{').newline()).append('}');
+        if (!getChildren().isEmpty()) {
+            super.writeChildrenTo(output.append('{').newline()).append('}');
+        }
         return output;
     }
 

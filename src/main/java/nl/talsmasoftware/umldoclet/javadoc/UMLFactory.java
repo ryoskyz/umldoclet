@@ -313,7 +313,7 @@ public class UMLFactory {
     private Type populateType(Type type, TypeElement typeElement) {
         // Add the various parts of the class UML, order matters here, obviously!
         List<? extends Element> enclosedElements = typeElement.getEnclosedElements();
-        if (Type.Classification.ENUM.equals(type.getClassfication())) enclosedElements.stream()
+        if (Type.Classification.ENUM.equals(type.getClassification())) enclosedElements.stream()
                 .filter(elem -> ElementKind.ENUM_CONSTANT.equals(elem.getKind()))
                 .filter(VariableElement.class::isInstance).map(VariableElement.class::cast)
                 .map(enumConst -> createField(type, enumConst))
