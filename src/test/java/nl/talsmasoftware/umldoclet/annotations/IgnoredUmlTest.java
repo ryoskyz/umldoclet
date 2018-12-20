@@ -41,4 +41,8 @@ public class IgnoredUmlTest {
 
     }
 
+    @UML(ignored = true)
+    public static class IgnoredInnerClass {
+
+    }
 }
