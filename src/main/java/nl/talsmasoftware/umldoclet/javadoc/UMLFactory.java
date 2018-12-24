@@ -165,6 +165,9 @@ public class UMLFactory {
         for (UML annotation : element.getAnnotationsByType(UML.class)) {
             if (annotation.exclude()) return true;
         }
+        if (element instanceof ExecutableElement && isMethodFromExcludedSuperclass((ExecutableElement) element)) {
+            return true;
+        }
         return false;
     }
 
@@ -312,12 +315,14 @@ public class UMLFactory {
         enclosedElements.stream()
                 .filter(elem -> ElementKind.FIELD.equals(elem.getKind()))
                 .filter(VariableElement.class::isInstance).map(VariableElement.class::cast)
+                .filter(field -> !isExcluded(type.getName(), field))
                 .map(field -> createField(type, field))
                 .forEach(type::addChild);
 
         List<ExecutableElement> constructors = enclosedElements.stream()
                 .filter(elem -> ElementKind.CONSTRUCTOR.equals(elem.getKind()))
                 .filter(ExecutableElement.class::isInstance).map(ExecutableElement.class::cast)
+                .filter(constructor -> !isExcluded(type.getName(), constructor))
                 .collect(toList());
         if (!isOnlyDefaultConstructor(constructors)) {
             constructors.stream()
@@ -328,7 +333,7 @@ public class UMLFactory {
         enclosedElements.stream()
                 .filter(elem -> ElementKind.METHOD.equals(elem.getKind()))
                 .filter(ExecutableElement.class::isInstance).map(ExecutableElement.class::cast)
-                .filter(method -> !isMethodFromExcludedSuperclass(method))
+                .filter(method -> !isExcluded(type.getName(), method))
                 .map(method -> createMethod(type, method))
                 .forEach(type::addChild);
 

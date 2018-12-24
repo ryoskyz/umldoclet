@@ -16,19 +16,27 @@
 package nl.talsmasoftware.umldoclet.annotations;
 
 import nl.talsmasoftware.umldoclet.UMLDoclet;
+import nl.talsmasoftware.umldoclet.util.Testing;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.spi.ToolProvider;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 public class IgnoredUmlTest {
     private static final File outputdir = new File("target/test-annotations");
+    private static final File packageUmlFile = new File(outputdir,
+            IgnoredUmlTest.class.getPackageName().replace('.', '/') + "/package.puml");
 
-    @Test
-    public void testCreateJavaDoc() {
+    private static String packageUml;
+
+    @BeforeClass
+    public static void createPackageDocumentation() {
         assertThat("Javadoc result", ToolProvider.findFirst("javadoc").get().run(
                 System.out, System.err,
                 "-d", outputdir.getPath(),
@@ -38,7 +46,20 @@ public class IgnoredUmlTest {
                 "-sourcepath", "src/test/java",
                 IgnoredUmlTest.class.getPackageName()
         ), is(0));
+    }
 
+    @Test
+    public void testCreateJavaDoc() {
+        if (packageUml == null) packageUml = Testing.read(packageUmlFile);
+        assertThat(packageUml, not(containsString("IgnoredInnerClass")));
+    }
+
+    @Test
+    @UML(exclude = true)
+    public void testExcludeMethod() {
+        if (packageUml == null) packageUml = Testing.read(packageUmlFile);
+        assertThat(packageUml, containsString("testCreateJavaDoc()"));
+        assertThat(packageUml, not(containsString("testExcludeMethod()")));
     }
 
     @UML(exclude = true)
