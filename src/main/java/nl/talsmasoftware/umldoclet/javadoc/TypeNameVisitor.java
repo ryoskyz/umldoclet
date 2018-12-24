@@ -58,7 +58,7 @@ final class TypeNameVisitor extends SimpleTypeVisitor9<TypeName, Void> {
      * {@code <T extends Comparable<T>>}
      *
      * @param type      The type to visit.
-     * @param parameter The parameter (ignored by our visitor).
+     * @param parameter The parameter (exclude by our visitor).
      * @return The type name
      */
     private TypeName _visit(TypeMirror type, Void parameter) {

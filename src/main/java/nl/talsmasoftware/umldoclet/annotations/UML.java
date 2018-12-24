@@ -21,6 +21,6 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.CLASS)
 public @interface UML {
 
-    boolean ignored() default false;
+    boolean exclude() default false;
 
 }
